@@ -5,12 +5,14 @@ import { Dashboard } from './views/Dashboard';
 import { FundingManager } from './views/FundingManager';
 import { TenderView, PhilanthropyView, StrategyView } from './views/ResourceManager';
 import { AIReports } from './views/AIReports';
+import { Deadlines } from './views/Deadlines';
+import { NotesDump } from './views/NotesDump';
 
 // Dummy Initial Data to populate the app for first-time viewing
 const INITIAL_FUNDING: FundingGrant[] = [
-    { id: '1', funder: 'Gates Foundation', fundName: 'Global Health Initiative', isSmallFund: false, smtStatus: SMTStatus.APPROVED, assignedTo: 'Sarah Jenkins', relevantWCAProject: 'Water Access', details: 'Large scale implementation', amount: 500000, dateForFunding: '2024-11-15', deliveryDates: '2025-2027', action: 'Draft Proposal', website: 'https://gatesfoundation.org', createdAt: '2024-01-01' },
-    { id: '2', funder: 'Community Trust', fundName: 'Local Impact Grant', isSmallFund: true, smtStatus: SMTStatus.PENDING, assignedTo: 'Mike Ross', relevantWCAProject: 'Youth Education', details: 'Tablets for schools', amount: 25000, dateForFunding: '2024-06-30', deliveryDates: 'Q4 2024', action: 'Review budget', website: '', createdAt: '2024-02-15' },
-    { id: '3', funder: 'Tech For Good', fundName: 'Innovation Award', isSmallFund: false, smtStatus: SMTStatus.NEEDS_INFO, assignedTo: 'Sarah Jenkins', relevantWCAProject: 'Digital Transformation', details: 'App development', amount: 120000, dateForFunding: '2024-08-01', deliveryDates: '2025', action: 'Contact officer', website: '', createdAt: '2024-03-10' }
+    { id: '1', funder: 'Gates Foundation', fundName: 'Global Health Initiative', isSmallFund: false, smtStatus: SMTStatus.APPROVED, assignedTo: 'Sarah Jenkins', relevantWCAProject: 'Water Access', details: 'Large scale implementation', amount: 60000, dateForFunding: '2026-11-15', deliveryDates: '2027-2028', action: 'Draft Proposal', website: 'https://gatesfoundation.org', createdAt: '2024-01-01' },
+    { id: '2', funder: 'Community Trust', fundName: 'Local Impact Grant', isSmallFund: true, smtStatus: SMTStatus.PENDING, assignedTo: 'Mike Ross', relevantWCAProject: 'Youth Education', details: 'Tablets for schools', amount: 20000, dateForFunding: '2026-06-30', deliveryDates: 'Q4 2026', action: 'Review budget', website: '', createdAt: '2024-02-15' },
+    { id: '3', funder: 'Tech For Good', fundName: 'Innovation Award', isSmallFund: false, smtStatus: SMTStatus.NEEDS_INFO, assignedTo: 'Sarah Jenkins', relevantWCAProject: 'Digital Transformation', details: 'App development', amount: 40000, dateForFunding: '2026-08-01', deliveryDates: '2027', action: 'Contact officer', website: '', createdAt: '2024-03-10' }
 ];
 
 const App: React.FC = () => {
@@ -37,11 +39,16 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [notes, setNotes] = useState<string>(() => {
+    return localStorage.getItem('cf_notes') || '';
+  });
+
   // Persistence Effects
   useEffect(() => localStorage.setItem('cf_funding', JSON.stringify(fundingData)), [fundingData]);
   useEffect(() => localStorage.setItem('cf_tenders', JSON.stringify(tenders)), [tenders]);
   useEffect(() => localStorage.setItem('cf_philanthropy', JSON.stringify(philanthropy)), [philanthropy]);
   useEffect(() => localStorage.setItem('cf_strategy', JSON.stringify(strategy)), [strategy]);
+  useEffect(() => localStorage.setItem('cf_notes', notes), [notes]);
 
   // Handlers
   const handleSaveFunding = (item: FundingGrant) => {
@@ -86,8 +93,14 @@ const App: React.FC = () => {
       {currentView === 'strategy' && (
         <StrategyView data={strategy} onSave={saveStrategy} onDelete={deleteStrategy} />
       )}
-      {currentView === 'reports' && (
+      {currentView === 'summary' && (
         <AIReports funding={fundingData} strategy={strategy} />
+      )}
+      {currentView === 'deadlines' && (
+        <Deadlines data={fundingData} />
+      )}
+      {currentView === 'notes' && (
+        <NotesDump notes={notes} onChange={setNotes} />
       )}
     </Layout>
   );

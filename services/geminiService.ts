@@ -1,16 +1,16 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { FundingGrant, StrategyItem } from "../types";
-
-const apiKey = process.env.API_KEY || '';
-const ai = new GoogleGenAI({ apiKey });
 
 export const generateExecutiveReport = async (
   fundingData: FundingGrant[],
   strategyData: StrategyItem[]
 ): Promise<string> => {
-  if (!apiKey) {
+  if (!process.env.API_KEY) {
     return "API Key is missing. Please configure the environment variable.";
   }
+
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const prompt = `
     You are an expert fundraising consultant for a charity. 
@@ -32,7 +32,7 @@ export const generateExecutiveReport = async (
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3-flash-preview',
       contents: prompt,
     });
     return response.text || "No report generated.";

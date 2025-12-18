@@ -57,7 +57,7 @@ export const FundingManager: React.FC<FundingManagerProps> = ({ data, onSave, on
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-2xl font-bold text-slate-800">Funding & Grants</h2>
+        <h2 className="text-2xl font-bold text-slate-800">Possible Funding & Grants</h2>
         <button 
           onClick={handleAddNew}
           className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm"
@@ -116,7 +116,7 @@ export const FundingManager: React.FC<FundingManagerProps> = ({ data, onSave, on
                     {grant.isSmallFund && <span className="ml-2 text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded border border-blue-100">Small</span>}
                   </td>
                   <td className="px-6 py-4 text-slate-600">{grant.assignedTo || 'Unassigned'}</td>
-                  <td className="px-6 py-4 text-right font-medium text-slate-700">${grant.amount.toLocaleString()}</td>
+                  <td className="px-6 py-4 text-right font-medium text-slate-700">£{grant.amount.toLocaleString()}</td>
                   <td className="px-6 py-4 text-slate-600">{new Date(grant.dateForFunding).toLocaleDateString()}</td>
                   <td className="px-6 py-4">
                     <button 
@@ -202,7 +202,7 @@ export const FundingManager: React.FC<FundingManagerProps> = ({ data, onSave, on
                     />
 
                     <Input 
-                        label="Amount ($)" 
+                        label="Amount (£)" 
                         type="number"
                         value={currentGrant.amount} 
                         onChange={e => setCurrentGrant({...currentGrant, amount: parseFloat(e.target.value) || 0})} 

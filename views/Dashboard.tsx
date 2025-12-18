@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { FundingGrant, SMTStatus } from '../types';
 import { Card, CardBody, CardHeader } from '../components/ui/Card';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { Calendar, DollarSign, CheckCircle2, Clock } from 'lucide-react';
+import { Calendar, CheckCircle2, Clock } from 'lucide-react';
 
 interface DashboardProps {
   funding: FundingGrant[];
@@ -17,15 +17,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ funding }) => {
     const approvedCount = funding.filter(f => f.smtStatus === SMTStatus.APPROVED).length;
     const pendingCount = funding.filter(f => f.smtStatus === SMTStatus.PENDING).length;
     
-    // Calculate immediate deadlines (next 30 days)
-    const now = new Date();
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(now.getDate() + 30);
-    
-    const urgentDeadlines = funding.filter(f => {
-      const d = new Date(f.dateForFunding);
-      return d >= now && d <= thirtyDaysFromNow;
-    }).length;
+    // Requested hardcoded value for Urgent Deadlines to be 3
+    const urgentDeadlines = 3; 
 
     return { totalPotential, approvedCount, pendingCount, urgentDeadlines };
   }, [funding]);
@@ -55,13 +48,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ funding }) => {
     <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-end mb-6">
         <div>
-           <h2 className="text-2xl font-bold text-slate-800">Executive Dashboard</h2>
+           <h2 className="text-2xl font-bold text-slate-800">Deputy Director's Dashboard</h2>
            <p className="text-slate-500">Overview of fundraising activities and financial outlook</p>
         </div>
         <div className="text-right">
             <span className="text-sm text-slate-500">Total Potential Pipeline</span>
             <div className="text-3xl font-bold text-emerald-600">
-                ${stats.totalPotential.toLocaleString()}
+                £{stats.totalPotential.toLocaleString()}
             </div>
         </div>
       </div>
@@ -175,7 +168,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ funding }) => {
                                 <tr key={grant.id} className="hover:bg-slate-50 transition-colors">
                                     <td className="px-6 py-4 font-medium text-slate-900">{grant.funder}</td>
                                     <td className="px-6 py-4 text-slate-600">{grant.fundName}</td>
-                                    <td className="px-6 py-4 text-emerald-600 font-medium">${grant.amount.toLocaleString()}</td>
+                                    <td className="px-6 py-4 text-emerald-600 font-medium">£{grant.amount.toLocaleString()}</td>
                                     <td className="px-6 py-4 text-slate-500">{prepDate.toLocaleString('default', { month: 'short' })}</td>
                                     <td className="px-6 py-4 text-slate-500">{date.toLocaleDateString()}</td>
                                     <td className="px-6 py-4">

@@ -24,7 +24,7 @@ export const AIReports: React.FC<AIReportsProps> = ({ funding, strategy }) => {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="text-center space-y-4">
-        <h2 className="text-3xl font-bold text-slate-900">AI Strategy Consultant</h2>
+        <h2 className="text-3xl font-bold text-slate-900">Summary of Funding</h2>
         <p className="text-slate-500 max-w-xl mx-auto">
           Generate an executive summary and strategic insights based on your current funding pipeline and strategy development items using Gemini.
         </p>

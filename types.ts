@@ -45,4 +45,4 @@ export interface StrategyItem {
   furtherInfo: string;
 }
 
-export type ViewType = 'dashboard' | 'tenders' | 'philanthropy' | 'funding' | 'strategy' | 'reports';
+export type ViewType = 'dashboard' | 'tenders' | 'philanthropy' | 'funding' | 'summary' | 'deadlines' | 'strategy' | 'notes';
