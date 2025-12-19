@@ -41,7 +41,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onChangeV
               WandCareAlliance
             </h1>
           </div>
-          <p className="text-emerald-400 text-lg mt-2 uppercase tracking-widest pl-12 font-bold leading-tight">
+          <p className="text-emerald-400 text-xl mt-2 uppercase tracking-widest pl-12 font-black leading-tight">
             Fundraising CRM
           </p>
         </div>

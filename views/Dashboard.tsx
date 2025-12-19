@@ -112,7 +112,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ funding }) => {
       <div className="flex justify-between items-end border-b border-slate-200 pb-6">
         <div>
            <h2 className="text-3xl font-bold text-slate-900">Deputy Director's Dashboard</h2>
-           <p className="text-slate-500 mt-1">Overview of fundraising activities and financial outlook</p>
+           <p className="text-slate-500 mt-1">Income Diversity Grants and Funders</p>
         </div>
         <div className="text-right">
             <span className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Annual Target</span>
@@ -123,9 +123,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ funding }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Table 1: Status Summary */}
+        {/* Table 1: Summary of Funding */}
         <Card className="flex flex-col h-full">
-          <CardHeader title="Funding Status Overview" />
+          <CardHeader title="Summary of Funding" />
           <div className="overflow-x-auto flex-1">
             <table className="w-full text-sm text-left">
               <thead className="bg-slate-50 text-slate-500 uppercase font-bold text-[10px] tracking-widest">
@@ -198,9 +198,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ funding }) => {
         </Card>
       </div>
 
-      {/* Table 3: Funding Deadlines Pipeline */}
+      {/* Table 3: Funding to Respond to deadlines */}
       <Card className="flex flex-col">
-        <CardHeader title="Funding Deadlines Pipeline" />
+        <CardHeader title="Funding to Respond to deadlines" />
         <div className="overflow-x-auto flex-1">
           <table className="w-full text-sm text-left">
             <thead className="bg-slate-50 text-slate-500 uppercase font-bold text-[10px] tracking-widest">
