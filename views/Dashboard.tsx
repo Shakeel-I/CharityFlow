@@ -1,195 +1,263 @@
-import React, { useMemo } from 'react';
+
+import React, { useMemo, useState } from 'react';
 import { FundingGrant, SMTStatus } from '../types';
-import { Card, CardBody, CardHeader } from '../components/ui/Card';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { Calendar, CheckCircle2, Clock } from 'lucide-react';
+import { Card, CardHeader } from '../components/ui/Card';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface DashboardProps {
   funding: FundingGrant[];
 }
 
-const COLORS = ['#10b981', '#f59e0b', '#ef4444', '#6366f1'];
-
 export const Dashboard: React.FC<DashboardProps> = ({ funding }) => {
+  const INITIAL_LIMIT_SUMMARY = 3;
+  const INITIAL_LIMIT_PIPELINE = 5;
   
-  const stats = useMemo(() => {
-    const totalPotential = funding.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
-    const approvedCount = funding.filter(f => f.smtStatus === SMTStatus.APPROVED).length;
-    const pendingCount = funding.filter(f => f.smtStatus === SMTStatus.PENDING).length;
-    
-    // Requested hardcoded value for Urgent Deadlines to be 3
-    const urgentDeadlines = 3; 
+  // State for expand/collapse
+  const [isStatusExpanded, setIsStatusExpanded] = useState(false);
+  const [isProjectExpanded, setIsProjectExpanded] = useState(false);
+  const [isPipelineExpanded, setIsPipelineExpanded] = useState(false);
 
-    return { totalPotential, approvedCount, pendingCount, urgentDeadlines };
-  }, [funding]);
-
-  const statusData = useMemo(() => {
-    const counts = funding.reduce((acc, curr) => {
-      acc[curr.smtStatus] = (acc[curr.smtStatus] || 0) + 1;
+  // Table 1 Summary: Status, Amount, Count
+  const statusSummary = useMemo(() => {
+    const summary = funding.reduce((acc, curr) => {
+      const status = curr.smtStatus;
+      if (!acc[status]) acc[status] = { amount: 0, count: 0 };
+      acc[status].amount += Number(curr.amount || 0);
+      acc[status].count += 1;
       return acc;
-    }, {} as Record<string, number>);
+    }, {} as Record<string, { amount: number; count: number }>);
 
-    return Object.keys(counts).map(key => ({ name: key, value: counts[key] }));
+    return Object.entries(summary).map(([status, stats]: [string, { amount: number; count: number }]) => ({
+      status,
+      amount: stats.amount,
+      count: stats.count
+    }));
   }, [funding]);
 
-  const monthData = useMemo(() => {
-     // Aggregate amount by month of deadline
-     const data: Record<string, number> = {};
-     funding.forEach(f => {
-        if (!f.dateForFunding) return;
-        const date = new Date(f.dateForFunding);
-        const key = date.toLocaleString('default', { month: 'short', year: '2-digit' });
-        data[key] = (data[key] || 0) + Number(f.amount || 0);
-     });
-     return Object.entries(data).map(([name, amount]) => ({ name, amount })).slice(0, 6);
+  // Table 2 Summary: Relevant WCA project, Amount, Count
+  const projectSummary = useMemo(() => {
+    const summary = funding.reduce((acc, curr) => {
+      const project = curr.relevantWCAProject || 'Unassigned';
+      if (!acc[project]) acc[project] = { amount: 0, count: 0 };
+      acc[project].amount += Number(curr.amount || 0);
+      acc[project].count += 1;
+      return acc;
+    }, {} as Record<string, { amount: number; count: number }>);
+
+    return Object.entries(summary).map(([project, stats]: [string, { amount: number; count: number }]) => ({
+      project,
+      amount: stats.amount,
+      count: stats.count
+    }));
   }, [funding]);
+
+  // Table 3 Summary: Prep Month, Deadline Month, List of Funders
+  const deadlinePipeline = useMemo(() => {
+    // Define an interface for the summary value to fix type inference issues with Object.values
+    interface PipelineSummaryItem {
+      prepMonth: string;
+      deadlineMonth: string;
+      funders: string[];
+      sortKey: number;
+    }
+
+    const summary = funding.reduce((acc, curr) => {
+      const pMonth = curr.prepMonth || 'N/A';
+      const dMonth = curr.deadlineMonth || 'N/A';
+      const key = `${pMonth}-${dMonth}`;
+      
+      if (!acc[key]) {
+        const dateObj = new Date(curr.dateForFunding);
+        acc[key] = { 
+          prepMonth: pMonth,
+          deadlineMonth: dMonth,
+          funders: [],
+          sortKey: new Date(dateObj.getFullYear(), dateObj.getMonth(), 1).getTime()
+        };
+      }
+      
+      if (!acc[key].funders.includes(curr.funder)) {
+        acc[key].funders.push(curr.funder);
+      }
+      return acc;
+    }, {} as Record<string, PipelineSummaryItem>);
+
+    // Use explicit type assertion for Object.values to avoid 'unknown' type error on line 76
+    const pipelineValues = Object.values(summary) as PipelineSummaryItem[];
+    return pipelineValues.sort((a, b) => a.sortKey - b.sortKey);
+  }, [funding]);
+
+  // Slicing logic for tables
+  const visibleStatus = isStatusExpanded ? statusSummary : statusSummary.slice(0, INITIAL_LIMIT_SUMMARY);
+  const visibleProjects = isProjectExpanded ? projectSummary : projectSummary.slice(0, INITIAL_LIMIT_SUMMARY);
+  const visiblePipeline = isPipelineExpanded ? deadlinePipeline : deadlinePipeline.slice(0, INITIAL_LIMIT_PIPELINE);
+
+  const getStatusColorClass = (status: string) => {
+    switch (status) {
+      case SMTStatus.SUCCESSFUL: return 'bg-emerald-100 text-emerald-800';
+      case SMTStatus.CONSIDERATION: return 'bg-purple-100 text-purple-800';
+      case SMTStatus.MANAGERS_MEETING: return 'bg-indigo-100 text-indigo-800';
+      case SMTStatus.PROGRESS_APP:
+      case SMTStatus.PROGRESS_AWAITING:
+      case SMTStatus.PROGRESS_SUITABLE: return 'bg-blue-100 text-blue-800';
+      case SMTStatus.NOT_PROCEEDING:
+      case SMTStatus.UNSUCCESSFUL: return 'bg-red-100 text-red-800';
+      default: return 'bg-slate-100 text-slate-700';
+    }
+  };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex justify-between items-end mb-6">
+    <div className="space-y-8 animate-fade-in">
+      {/* Header Section */}
+      <div className="flex justify-between items-end border-b border-slate-200 pb-6">
         <div>
-           <h2 className="text-2xl font-bold text-slate-800">Deputy Director's Dashboard</h2>
-           <p className="text-slate-500">Overview of fundraising activities and financial outlook</p>
+           <h2 className="text-3xl font-bold text-slate-900">Deputy Director's Dashboard</h2>
+           <p className="text-slate-500 mt-1">Overview of fundraising activities and financial outlook</p>
         </div>
         <div className="text-right">
-            <span className="text-sm text-slate-500">Total Potential Pipeline</span>
-            <div className="text-3xl font-bold text-emerald-600">
-                £{stats.totalPotential.toLocaleString()}
+            <span className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Annual Target</span>
+            <div className="text-4xl font-black text-emerald-600 tabular-nums">
+                £120,000
             </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
-            <div className="p-3 bg-blue-100 text-blue-600 rounded-full">
-                <CheckCircle2 size={24} />
-            </div>
-            <div>
-                <p className="text-slate-500 text-sm font-medium">Approved Grants</p>
-                <p className="text-2xl font-bold text-slate-800">{stats.approvedCount}</p>
-            </div>
-        </div>
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
-            <div className="p-3 bg-amber-100 text-amber-600 rounded-full">
-                <Clock size={24} />
-            </div>
-            <div>
-                <p className="text-slate-500 text-sm font-medium">Pending Review</p>
-                <p className="text-2xl font-bold text-slate-800">{stats.pendingCount}</p>
-            </div>
-        </div>
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
-            <div className="p-3 bg-red-100 text-red-600 rounded-full">
-                <Calendar size={24} />
-            </div>
-            <div>
-                <p className="text-slate-500 text-sm font-medium">Urgent Deadlines (30d)</p>
-                <p className="text-2xl font-bold text-slate-800">{stats.urgentDeadlines}</p>
-            </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="h-96">
-            <CardHeader title="Funding by Status" />
-            <CardBody className="h-80 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                        <Pie
-                            data={statusData}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={60}
-                            outerRadius={80}
-                            paddingAngle={5}
-                            dataKey="value"
-                        >
-                            {statusData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                        </Pie>
-                        <Tooltip />
-                    </PieChart>
-                </ResponsiveContainer>
-                <div className="flex justify-center gap-4 text-xs text-slate-500 mt-[-20px]">
-                    {statusData.map((entry, index) => (
-                        <div key={entry.name} className="flex items-center gap-1">
-                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                            {entry.name}
-                        </div>
-                    ))}
-                </div>
-            </CardBody>
-        </Card>
-
-        <Card className="h-96">
-            <CardHeader title="Projected Funding by Deadline" />
-            <CardBody className="h-80 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={monthData}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />
-                        <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
-                        <Tooltip 
-                            cursor={{fill: '#f1f5f9'}}
-                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} 
-                        />
-                        <Bar dataKey="amount" fill="#10b981" radius={[4, 4, 0, 0]} barSize={40} />
-                    </BarChart>
-                </ResponsiveContainer>
-            </CardBody>
-        </Card>
-      </div>
-
-      <div className="mt-8">
-          <h3 className="text-lg font-bold text-slate-800 mb-4">Urgent: Funding to Respond to Deadlines</h3>
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-             <table className="w-full text-sm text-left">
-                <thead className="bg-slate-50 text-slate-500 uppercase font-medium text-xs">
-                    <tr>
-                        <th className="px-6 py-4">Funder</th>
-                        <th className="px-6 py-4">Grant Name</th>
-                        <th className="px-6 py-4">Amount</th>
-                        <th className="px-6 py-4">Prep Month</th>
-                        <th className="px-6 py-4">Deadline</th>
-                        <th className="px-6 py-4">Status</th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                    {funding
-                        .sort((a,b) => new Date(a.dateForFunding).getTime() - new Date(b.dateForFunding).getTime())
-                        .slice(0, 5)
-                        .map(grant => {
-                            const date = new Date(grant.dateForFunding);
-                            const prepDate = new Date(date);
-                            prepDate.setMonth(date.getMonth() - 1);
-                            
-                            return (
-                                <tr key={grant.id} className="hover:bg-slate-50 transition-colors">
-                                    <td className="px-6 py-4 font-medium text-slate-900">{grant.funder}</td>
-                                    <td className="px-6 py-4 text-slate-600">{grant.fundName}</td>
-                                    <td className="px-6 py-4 text-emerald-600 font-medium">£{grant.amount.toLocaleString()}</td>
-                                    <td className="px-6 py-4 text-slate-500">{prepDate.toLocaleString('default', { month: 'short' })}</td>
-                                    <td className="px-6 py-4 text-slate-500">{date.toLocaleDateString()}</td>
-                                    <td className="px-6 py-4">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                            grant.smtStatus === SMTStatus.APPROVED ? 'bg-emerald-100 text-emerald-800' :
-                                            grant.smtStatus === SMTStatus.PENDING ? 'bg-amber-100 text-amber-800' : 
-                                            'bg-slate-100 text-slate-800'
-                                        }`}>
-                                            {grant.smtStatus}
-                                        </span>
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    {funding.length === 0 && (
-                        <tr><td colSpan={6} className="px-6 py-8 text-center text-slate-400">No active funding records found.</td></tr>
-                    )}
-                </tbody>
-             </table>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Table 1: Status Summary */}
+        <Card className="flex flex-col h-full">
+          <CardHeader title="Funding Status Overview" />
+          <div className="overflow-x-auto flex-1">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-slate-50 text-slate-500 uppercase font-bold text-[10px] tracking-widest">
+                <tr>
+                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4 text-right">Amount</th>
+                  <th className="px-6 py-4 text-center">Count</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {visibleStatus.map((item, idx) => (
+                  <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${getStatusColorClass(item.status)}`}>
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right font-medium text-slate-900">£{item.amount.toLocaleString()}</td>
+                    <td className="px-6 py-4 text-center text-slate-500 font-semibold">{item.count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+          {statusSummary.length > INITIAL_LIMIT_SUMMARY && (
+            <div className="p-3 border-t border-slate-100 text-center">
+              <button 
+                onClick={() => setIsStatusExpanded(!isStatusExpanded)}
+                className="text-emerald-600 hover:text-emerald-700 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 mx-auto transition-all"
+              >
+                {isStatusExpanded ? <><ChevronUp size={14} /> Show Less</> : <><ChevronDown size={14} /> Expand List ({statusSummary.length})</>}
+              </button>
+            </div>
+          )}
+        </Card>
+
+        {/* Table 2: Project Allocation */}
+        <Card className="flex flex-col h-full">
+          <CardHeader title="WCA Project Allocation" />
+          <div className="overflow-x-auto flex-1">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-slate-50 text-slate-500 uppercase font-bold text-[10px] tracking-widest">
+                <tr>
+                  <th className="px-6 py-4">Relevant WCA Project</th>
+                  <th className="px-6 py-4 text-right">Amount</th>
+                  <th className="px-6 py-4 text-center">Count</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {visibleProjects.map((item, idx) => (
+                  <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="px-6 py-4 font-medium text-slate-800">{item.project}</td>
+                    <td className="px-6 py-4 text-right font-medium text-emerald-600">£{item.amount.toLocaleString()}</td>
+                    <td className="px-6 py-4 text-center text-slate-500 font-semibold">{item.count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {projectSummary.length > INITIAL_LIMIT_SUMMARY && (
+            <div className="p-3 border-t border-slate-100 text-center">
+              <button 
+                onClick={() => setIsProjectExpanded(!isProjectExpanded)}
+                className="text-emerald-600 hover:text-emerald-700 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 mx-auto transition-all"
+              >
+                {isProjectExpanded ? <><ChevronUp size={14} /> Show Less</> : <><ChevronDown size={14} /> Expand List ({projectSummary.length})</>}
+              </button>
+            </div>
+          )}
+        </Card>
       </div>
+
+      {/* Table 3: Funding Deadlines Pipeline */}
+      <Card className="flex flex-col">
+        <CardHeader title="Funding Deadlines Pipeline" />
+        <div className="overflow-x-auto flex-1">
+          <table className="w-full text-sm text-left">
+            <thead className="bg-slate-50 text-slate-500 uppercase font-bold text-[10px] tracking-widest">
+              <tr>
+                <th className="px-6 py-4">Prep Month</th>
+                <th className="px-6 py-4">Deadline Month</th>
+                <th className="px-6 py-4">Funder(s)</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {visiblePipeline.map((item, idx) => (
+                <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="text-amber-600 font-medium bg-amber-50 px-2.5 py-1 rounded border border-amber-100">
+                      {item.prepMonth}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="text-emerald-700 font-bold">
+                      {item.deadlineMonth}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-wrap gap-2">
+                      {item.funders.map((funder, fIdx) => (
+                        <span 
+                          key={fIdx} 
+                          className="inline-block bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs font-medium border border-slate-200"
+                        >
+                          {funder}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {deadlinePipeline.length === 0 && (
+                <tr>
+                  <td colSpan={3} className="px-6 py-12 text-center text-slate-400">
+                    No pipeline data available.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        {deadlinePipeline.length > INITIAL_LIMIT_PIPELINE && (
+          <div className="p-3 border-t border-slate-100 text-center">
+            <button 
+              onClick={() => setIsPipelineExpanded(!isPipelineExpanded)}
+              className="text-emerald-600 hover:text-emerald-700 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 mx-auto transition-all"
+            >
+              {isPipelineExpanded ? <><ChevronUp size={14} /> Show Less</> : <><ChevronDown size={14} /> Expand List ({deadlinePipeline.length})</>}
+            </button>
+          </div>
+        )}
+      </Card>
     </div>
   );
 };

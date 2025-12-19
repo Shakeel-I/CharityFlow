@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { FundingGrant, SMTStatus } from '../types';
 import { Card } from '../components/ui/Card';
@@ -22,6 +23,20 @@ export const Deadlines: React.FC<DeadlinesProps> = ({ data }) => {
     if (diffDays <= 30) return 'bg-red-50 text-red-700 border-red-200'; // Urgent
     if (diffDays <= 60) return 'bg-amber-50 text-amber-700 border-amber-200'; // Upcoming
     return 'bg-emerald-50 text-emerald-700 border-emerald-200'; // Distant
+  };
+
+  const getStatusColorClass = (status: SMTStatus) => {
+    switch (status) {
+      case SMTStatus.SUCCESSFUL: return 'bg-emerald-100 text-emerald-800';
+      case SMTStatus.CONSIDERATION: return 'bg-purple-100 text-purple-800';
+      case SMTStatus.MANAGERS_MEETING: return 'bg-indigo-100 text-indigo-800';
+      case SMTStatus.PROGRESS_APP:
+      case SMTStatus.PROGRESS_AWAITING:
+      case SMTStatus.PROGRESS_SUITABLE: return 'bg-blue-100 text-blue-800';
+      case SMTStatus.NOT_PROCEEDING:
+      case SMTStatus.UNSUCCESSFUL: return 'bg-red-100 text-red-800';
+      default: return 'bg-slate-100 text-slate-700';
+    }
   };
 
   return (
@@ -62,12 +77,7 @@ export const Deadlines: React.FC<DeadlinesProps> = ({ data }) => {
                                 <td className="px-6 py-4 text-emerald-600 font-medium text-right">£{grant.amount.toLocaleString()}</td>
                                 <td className="px-6 py-4 text-slate-600">{grant.assignedTo || '-'}</td>
                                 <td className="px-6 py-4">
-                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                        grant.smtStatus === SMTStatus.APPROVED ? 'bg-emerald-100 text-emerald-800' :
-                                        grant.smtStatus === SMTStatus.PENDING ? 'bg-amber-100 text-amber-800' : 
-                                        grant.smtStatus === SMTStatus.REJECTED ? 'bg-red-100 text-red-800' :
-                                        'bg-slate-100 text-slate-800'
-                                    }`}>
+                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium uppercase ${getStatusColorClass(grant.smtStatus)}`}>
                                         {grant.smtStatus}
                                     </span>
                                 </td>

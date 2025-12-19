@@ -2,14 +2,15 @@
 import { GoogleGenAI } from "@google/genai";
 import { FundingGrant, StrategyItem } from "../types";
 
+/**
+ * Generates an executive summary report analyzing funding and strategy data.
+ * Adheres to @google/genai coding guidelines.
+ */
 export const generateExecutiveReport = async (
   fundingData: FundingGrant[],
   strategyData: StrategyItem[]
 ): Promise<string> => {
-  if (!process.env.API_KEY) {
-    return "API Key is missing. Please configure the environment variable.";
-  }
-
+  // Initialize Gemini with apiKey from environment variable directly
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const prompt = `
@@ -31,10 +32,17 @@ export const generateExecutiveReport = async (
   `;
 
   try {
+    // Using gemini-3-pro-preview for complex analysis and strategy recommendations
+    // Adding thinking budget to improve the reasoning and depth of the analysis
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-3-pro-preview',
       contents: prompt,
+      config: {
+        thinkingConfig: { thinkingBudget: 4000 }
+      }
     });
+
+    // Access the .text property directly as it is a getter, not a method
     return response.text || "No report generated.";
   } catch (error) {
     console.error("Gemini API Error:", error);

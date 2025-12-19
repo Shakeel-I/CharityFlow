@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ViewType } from '../types';
 import { 
@@ -31,14 +32,18 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onChangeV
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-64 bg-slate-900 text-white flex flex-col shadow-xl z-10 shrink-0">
+      {/* Sidebar - Widened to w-72 to accommodate full app name */}
+      <aside className="w-72 bg-slate-900 text-white flex flex-col shadow-xl z-10 shrink-0">
         <div className="p-6 border-b border-slate-800">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center font-bold text-lg">W</div>
-            <h1 className="text-xl font-bold tracking-wide truncate" title="WandCareAlliance">WandCareAlliance</h1>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-emerald-500 rounded-lg flex items-center justify-center font-black text-xl shadow-inner shrink-0">W</div>
+            <h1 className="text-xl font-bold tracking-tight text-white whitespace-nowrap" title="WandCareAlliance">
+              WandCareAlliance
+            </h1>
           </div>
-          <p className="text-slate-400 text-xs mt-1 uppercase tracking-wider pl-10">Fundraising Suite</p>
+          <p className="text-emerald-400 text-lg mt-2 uppercase tracking-widest pl-12 font-bold leading-tight">
+            Fundraising CRM
+          </p>
         </div>
 
         <nav className="flex-1 overflow-y-auto py-6 custom-scrollbar">

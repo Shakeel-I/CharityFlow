@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react';
 import { TenderSite, PhilanthropicSite, StrategyItem } from '../types';
 import { Card, CardHeader } from '../components/ui/Card';
 import { Input, TextArea } from '../components/ui/Input';
-import { Plus, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Plus, Trash2, Search, ExternalLink } from 'lucide-react';
 
 // --- Tender Sites Component ---
 export const TenderView: React.FC<{ 
@@ -61,8 +62,10 @@ export const PhilanthropyView: React.FC<{
 }> = ({ data, onSave, onDelete }) => {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [current, setCurrent] = useState<Partial<PhilanthropicSite>>({});
+    const [searchTerm, setSearchTerm] = useState('');
 
     const save = () => {
+        if (!current.organisation) return;
         onSave({
             id: crypto.randomUUID(),
             dateAdded: new Date().toISOString(),
@@ -74,40 +77,96 @@ export const PhilanthropyView: React.FC<{
         setIsFormOpen(false);
     }
 
+    const filtered = data.filter(s => s.organisation.toLowerCase().includes(searchTerm.toLowerCase()));
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-slate-800">Philanthropic Sites</h2>
-                <button onClick={() => setIsFormOpen(!isFormOpen)} className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 flex items-center gap-2"><Plus size={16}/> Add Site</button>
+                <div className="flex gap-2">
+                    <button onClick={() => setIsFormOpen(!isFormOpen)} className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 flex items-center gap-2 transition-colors">
+                        <Plus size={16}/> Add Site
+                    </button>
+                </div>
             </div>
 
             {isFormOpen && (
-                <Card className="bg-slate-50 border-emerald-100">
+                <Card className="bg-slate-50 border-emerald-100 animate-fade-in">
                     <CardHeader title="New Philanthropic Site" />
                     <div className="p-6 space-y-4">
-                        <Input label="Organisation" value={current.organisation || ''} onChange={e => setCurrent({...current, organisation: e.target.value})} />
-                        <Input label="Website" value={current.website || ''} onChange={e => setCurrent({...current, website: e.target.value})} />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Input label="Organisation" value={current.organisation || ''} onChange={e => setCurrent({...current, organisation: e.target.value})} />
+                            <Input label="Website" value={current.website || ''} onChange={e => setCurrent({...current, website: e.target.value})} />
+                        </div>
                         <TextArea label="Notes" value={current.notes || ''} onChange={e => setCurrent({...current, notes: e.target.value})} />
-                        <button onClick={save} className="bg-emerald-600 text-white px-6 py-2 rounded-lg">Save</button>
+                        <div className="flex justify-end gap-2">
+                            <button onClick={() => setIsFormOpen(false)} className="px-4 py-2 text-slate-500 hover:text-slate-800">Cancel</button>
+                            <button onClick={save} className="bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700">Save Site</button>
+                        </div>
                     </div>
                 </Card>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {data.map(site => (
-                    <Card key={site.id} className="hover:shadow-md transition-shadow">
-                        <div className="p-5">
-                            <div className="flex justify-between items-start mb-2">
-                                <h3 className="font-bold text-lg text-slate-800">{site.organisation}</h3>
-                                <button onClick={() => onDelete(site.id)} className="text-slate-300 hover:text-red-400"><Trash2 size={16}/></button>
-                            </div>
-                            <a href={site.website} target="_blank" rel="noreferrer" className="text-emerald-600 text-sm hover:underline truncate block mb-3">{site.website}</a>
-                            <p className="text-slate-600 text-sm bg-slate-50 p-3 rounded-lg">{site.notes}</p>
-                            <div className="mt-3 text-xs text-slate-400">Added: {new Date(site.dateAdded).toLocaleDateString()}</div>
-                        </div>
-                    </Card>
-                ))}
-            </div>
+            <Card>
+                <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center">
+                    <div className="relative flex-1 max-w-xs">
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input 
+                            type="text" 
+                            placeholder="Search organizations..." 
+                            className="w-full pl-9 pr-4 py-1.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                        <thead className="bg-slate-50 text-slate-500 uppercase font-bold text-[10px] tracking-wider">
+                            <tr>
+                                <th className="px-6 py-4">Date added to spreadsheet</th>
+                                <th className="px-6 py-4">Organisation</th>
+                                <th className="px-6 py-4">Website</th>
+                                <th className="px-6 py-4">Notes</th>
+                                <th className="px-6 py-4 text-right"></th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {filtered.map(site => (
+                                <tr key={site.id} className="hover:bg-slate-50 transition-colors group">
+                                    <td className="px-6 py-4 text-slate-400">
+                                        {new Date(site.dateAdded).toLocaleDateString()}
+                                    </td>
+                                    <td className="px-6 py-4 font-bold text-slate-800">
+                                        {site.organisation}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <a href={site.website} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline flex items-center gap-1">
+                                            Visit Site <ExternalLink size={12} />
+                                        </a>
+                                    </td>
+                                    <td className="px-6 py-4 text-slate-600 max-w-md">
+                                        <p className="line-clamp-2" title={site.notes}>{site.notes}</p>
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <button 
+                                            onClick={() => onDelete(site.id)} 
+                                            className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            <Trash2 size={16}/>
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                            {filtered.length === 0 && (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-12 text-center text-slate-400 italic">No philanthropic sites found.</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </Card>
         </div>
     );
 };

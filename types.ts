@@ -1,15 +1,21 @@
+
 export enum SMTStatus {
-  PENDING = 'Pending Review',
-  APPROVED = 'Approved',
-  REJECTED = 'Rejected',
-  NEEDS_INFO = 'Needs More Info'
+  CONSIDERATION = 'For consideration',
+  MANAGERS_MEETING = "For Managers' meeting",
+  PROGRESS_APP = 'In progress/go ahead - Application in progress',
+  PROGRESS_AWAITING = 'In progress/go ahead - awaiting application outcome',
+  PROGRESS_SUITABLE = 'In progress/go ahead - Suitable to apply',
+  RETURN_LATER = 'Return to this another time',
+  NOT_PROCEEDING = 'Not proceeding',
+  UNSUCCESSFUL = 'Applied - unsuccessful',
+  SUCCESSFUL = 'Applied - Successful'
 }
 
 export interface TenderSite {
   id: string;
   name: string;
   login: string;
-  password?: string; // Optional/Encrypted in real app
+  password?: string;
 }
 
 export interface PhilanthropicSite {
@@ -30,7 +36,9 @@ export interface FundingGrant {
   relevantWCAProject: string;
   details: string;
   amount: number;
-  dateForFunding: string; // Deadline
+  dateForFunding: string; // ISO Date for sorting/calendar
+  prepMonth: string;      // Display field e.g. "Nov 2025"
+  deadlineMonth: string;  // Display field e.g. "Jan 2026"
   deliveryDates: string;
   action: string;
   website: string;
