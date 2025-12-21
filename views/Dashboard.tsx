@@ -2,7 +2,7 @@
 import React, { useMemo, useState } from 'react';
 import { FundingGrant, SMTStatus } from '../types';
 import { Card, CardHeader } from '../components/ui/Card';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Zap, Target, Layers } from 'lucide-react';
 
 interface DashboardProps {
   funding: FundingGrant[];
@@ -12,12 +12,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ funding }) => {
   const INITIAL_LIMIT_SUMMARY = 3;
   const INITIAL_LIMIT_PIPELINE = 5;
   
-  // State for expand/collapse
   const [isStatusExpanded, setIsStatusExpanded] = useState(false);
   const [isProjectExpanded, setIsProjectExpanded] = useState(false);
   const [isPipelineExpanded, setIsPipelineExpanded] = useState(false);
 
-  // Table 1 Summary: Status, Amount, Count
   const statusSummary = useMemo(() => {
     const summary = funding.reduce((acc, curr) => {
       const status = curr.smtStatus;
@@ -28,13 +26,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ funding }) => {
     }, {} as Record<string, { amount: number; count: number }>);
 
     return Object.entries(summary).map(([status, stats]: [string, { amount: number; count: number }]) => ({
-      status,
-      amount: stats.amount,
-      count: stats.count
+      status, amount: stats.amount, count: stats.count
     }));
   }, [funding]);
 
-  // Table 2 Summary: Relevant WCA project, Amount, Count
   const projectSummary = useMemo(() => {
     const summary = funding.reduce((acc, curr) => {
       const project = curr.relevantWCAProject || 'Unassigned';
@@ -45,27 +40,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ funding }) => {
     }, {} as Record<string, { amount: number; count: number }>);
 
     return Object.entries(summary).map(([project, stats]: [string, { amount: number; count: number }]) => ({
-      project,
-      amount: stats.amount,
-      count: stats.count
+      project, amount: stats.amount, count: stats.count
     }));
   }, [funding]);
 
-  // Table 3 Summary: Prep Month, Deadline Month, List of Funders
   const deadlinePipeline = useMemo(() => {
-    // Define an interface for the summary value to fix type inference issues with Object.values
     interface PipelineSummaryItem {
       prepMonth: string;
       deadlineMonth: string;
       funders: string[];
       sortKey: number;
     }
-
     const summary = funding.reduce((acc, curr) => {
       const pMonth = curr.prepMonth || 'N/A';
       const dMonth = curr.deadlineMonth || 'N/A';
       const key = `${pMonth}-${dMonth}`;
-      
       if (!acc[key]) {
         const dateObj = new Date(curr.dateForFunding);
         acc[key] = { 
@@ -75,161 +64,160 @@ export const Dashboard: React.FC<DashboardProps> = ({ funding }) => {
           sortKey: new Date(dateObj.getFullYear(), dateObj.getMonth(), 1).getTime()
         };
       }
-      
-      if (!acc[key].funders.includes(curr.funder)) {
-        acc[key].funders.push(curr.funder);
-      }
+      if (!acc[key].funders.includes(curr.funder)) acc[key].funders.push(curr.funder);
       return acc;
     }, {} as Record<string, PipelineSummaryItem>);
-
-    // Use explicit type assertion for Object.values to avoid 'unknown' type error on line 76
-    const pipelineValues = Object.values(summary) as PipelineSummaryItem[];
-    return pipelineValues.sort((a, b) => a.sortKey - b.sortKey);
+    return (Object.values(summary) as PipelineSummaryItem[]).sort((a, b) => a.sortKey - b.sortKey);
   }, [funding]);
 
-  // Slicing logic for tables
   const visibleStatus = isStatusExpanded ? statusSummary : statusSummary.slice(0, INITIAL_LIMIT_SUMMARY);
   const visibleProjects = isProjectExpanded ? projectSummary : projectSummary.slice(0, INITIAL_LIMIT_SUMMARY);
   const visiblePipeline = isPipelineExpanded ? deadlinePipeline : deadlinePipeline.slice(0, INITIAL_LIMIT_PIPELINE);
 
   const getStatusColorClass = (status: string) => {
     switch (status) {
-      case SMTStatus.SUCCESSFUL: return 'bg-emerald-100 text-emerald-800';
-      case SMTStatus.CONSIDERATION: return 'bg-purple-100 text-purple-800';
-      case SMTStatus.MANAGERS_MEETING: return 'bg-indigo-100 text-indigo-800';
+      case SMTStatus.SUCCESSFUL: return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+      case SMTStatus.CONSIDERATION: return 'bg-purple-500/10 text-purple-400 border-purple-500/30';
+      case SMTStatus.MANAGERS_MEETING: return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30';
       case SMTStatus.PROGRESS_APP:
       case SMTStatus.PROGRESS_AWAITING:
-      case SMTStatus.PROGRESS_SUITABLE: return 'bg-blue-100 text-blue-800';
+      case SMTStatus.PROGRESS_SUITABLE: return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30';
       case SMTStatus.NOT_PROCEEDING:
-      case SMTStatus.UNSUCCESSFUL: return 'bg-red-100 text-red-800';
-      default: return 'bg-slate-100 text-slate-700';
+      case SMTStatus.UNSUCCESSFUL: return 'bg-rose-500/10 text-rose-400 border-rose-500/30';
+      default: return 'bg-slate-500/10 text-slate-400 border-slate-500/30';
     }
   };
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      {/* Header Section */}
-      <div className="flex justify-between items-end border-b border-slate-200 pb-6">
+    <div className="space-y-10 animate-fade-in">
+      {/* Header HUD */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-slate-800 pb-10 gap-6">
         <div>
-           <h2 className="text-3xl font-bold text-slate-900">Deputy Director's Dashboard</h2>
-           <p className="text-slate-500 mt-1">Income Diversity Grants and Funders</p>
+           <h2 className="text-3xl font-black text-white tracking-tighter mb-2 uppercase">FUNDRAISING CRM</h2>
+           <p className="text-cyan-400/90 mono text-sm flex items-center gap-2">
+             <Zap size={14} className="animate-pulse" /> INCOME DIVERSITY GRANTS & FUNDERS
+           </p>
         </div>
-        <div className="text-right">
-            <span className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Annual Target</span>
-            <div className="text-4xl font-black text-emerald-600 tabular-nums">
-                £120,000
+        <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800 backdrop-blur-sm flex items-center gap-6 min-w-[300px]">
+            <div className="p-3 bg-cyan-500/10 rounded-xl text-cyan-400">
+              <Target size={32} />
+            </div>
+            <div>
+              <span className="text-[10px] mono font-bold text-slate-400 uppercase tracking-widest">Annual Target</span>
+              <div className="text-4xl font-black text-white tabular-nums mono neon-glow-cyan">
+                  £120,000
+              </div>
             </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Table 1: Summary of Funding */}
-        <Card className="flex flex-col h-full">
+        {/* Summary of Funding */}
+        <Card>
           <CardHeader title="Summary of Funding" />
-          <div className="overflow-x-auto flex-1">
+          <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
-              <thead className="bg-slate-50 text-slate-500 uppercase font-bold text-[10px] tracking-widest">
+              <thead className="bg-slate-900/50 text-slate-400 uppercase mono text-[10px] tracking-widest">
                 <tr>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4 text-right">Amount</th>
-                  <th className="px-6 py-4 text-center">Count</th>
+                  <th className="px-8 py-4">Status</th>
+                  <th className="px-8 py-4 text-right">Amount (GBP)</th>
+                  <th className="px-8 py-4 text-center">Count</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-800/50">
                 {visibleStatus.map((item, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${getStatusColorClass(item.status)}`}>
+                  <tr key={idx} className="hover:bg-cyan-500/5 transition-all duration-300 group">
+                    <td className="px-8 py-5">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${getStatusColorClass(item.status)}`}>
                         {item.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right font-medium text-slate-900">£{item.amount.toLocaleString()}</td>
-                    <td className="px-6 py-4 text-center text-slate-500 font-semibold">{item.count}</td>
+                    <td className="px-8 py-5 text-right font-bold text-slate-100 mono">£{item.amount.toLocaleString()}</td>
+                    <td className="px-8 py-5 text-center text-cyan-400 font-black mono text-xs">{item.count}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
           {statusSummary.length > INITIAL_LIMIT_SUMMARY && (
-            <div className="p-3 border-t border-slate-100 text-center">
+            <div className="p-4 bg-slate-950/20 text-center border-t border-slate-800/50">
               <button 
                 onClick={() => setIsStatusExpanded(!isStatusExpanded)}
-                className="text-emerald-600 hover:text-emerald-700 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 mx-auto transition-all"
+                className="text-cyan-400 hover:text-cyan-300 text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 mx-auto transition-all"
               >
-                {isStatusExpanded ? <><ChevronUp size={14} /> Show Less</> : <><ChevronDown size={14} /> Expand List ({statusSummary.length})</>}
+                {isStatusExpanded ? <><ChevronUp size={14} /> COLLAPSE VIEW</> : <><ChevronDown size={14} /> EXPAND DATASET ({statusSummary.length})</>}
               </button>
             </div>
           )}
         </Card>
 
-        {/* Table 2: Project Allocation */}
-        <Card className="flex flex-col h-full">
-          <CardHeader title="WCA Project Allocation" />
-          <div className="overflow-x-auto flex-1">
+        {/* Relevant WCA Project */}
+        <Card>
+          <CardHeader title="Relevant WCA Project" />
+          <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
-              <thead className="bg-slate-50 text-slate-500 uppercase font-bold text-[10px] tracking-widest">
+              <thead className="bg-slate-900/50 text-slate-400 uppercase mono text-[10px] tracking-widest">
                 <tr>
-                  <th className="px-6 py-4">Relevant WCA Project</th>
-                  <th className="px-6 py-4 text-right">Amount</th>
-                  <th className="px-6 py-4 text-center">Count</th>
+                  <th className="px-8 py-4">Project</th>
+                  <th className="px-8 py-4 text-right">Amount</th>
+                  <th className="px-8 py-4 text-center">Count</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-800/50">
                 {visibleProjects.map((item, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="px-6 py-4 font-medium text-slate-800">{item.project}</td>
-                    <td className="px-6 py-4 text-right font-medium text-emerald-600">£{item.amount.toLocaleString()}</td>
-                    <td className="px-6 py-4 text-center text-slate-500 font-semibold">{item.count}</td>
+                  <tr key={idx} className="hover:bg-cyan-500/5 transition-all duration-300">
+                    <td className="px-8 py-5 font-bold text-slate-200 flex items-center gap-3 italic">
+                      <Layers size={14} className="text-cyan-500" /> {item.project}
+                    </td>
+                    <td className="px-8 py-5 text-right font-black text-cyan-400 mono">£{item.amount.toLocaleString()}</td>
+                    <td className="px-8 py-5 text-center text-slate-400 mono text-xs">{item.count}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
           {projectSummary.length > INITIAL_LIMIT_SUMMARY && (
-            <div className="p-3 border-t border-slate-100 text-center">
+            <div className="p-4 bg-slate-950/20 text-center border-t border-slate-800/50">
               <button 
                 onClick={() => setIsProjectExpanded(!isProjectExpanded)}
-                className="text-emerald-600 hover:text-emerald-700 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 mx-auto transition-all"
+                className="text-cyan-400 hover:text-cyan-300 text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 mx-auto transition-all"
               >
-                {isProjectExpanded ? <><ChevronUp size={14} /> Show Less</> : <><ChevronDown size={14} /> Expand List ({projectSummary.length})</>}
+                {isProjectExpanded ? <><ChevronUp size={14} /> COLLAPSE VIEW</> : <><ChevronDown size={14} /> EXPAND DATASET ({projectSummary.length})</>}
               </button>
             </div>
           )}
         </Card>
       </div>
 
-      {/* Table 3: Funding to Respond to deadlines */}
-      <Card className="flex flex-col">
-        <CardHeader title="Funding to Respond to deadlines" />
-        <div className="overflow-x-auto flex-1">
+      {/* Funding to Respond to deadlines */}
+      <Card>
+        <CardHeader title="Funding to Respond to Deadlines" />
+        <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="bg-slate-50 text-slate-500 uppercase font-bold text-[10px] tracking-widest">
+            <thead className="bg-slate-900/50 text-slate-400 uppercase mono text-[10px] tracking-widest">
               <tr>
-                <th className="px-6 py-4">Prep Month</th>
-                <th className="px-6 py-4">Deadline Month</th>
-                <th className="px-6 py-4">Funder(s)</th>
+                <th className="px-8 py-4">Phase: Prep</th>
+                <th className="px-8 py-4">Phase: Deadline</th>
+                <th className="px-8 py-4">Entities Involved</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-800/50">
               {visiblePipeline.map((item, idx) => (
-                <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-amber-600 font-medium bg-amber-50 px-2.5 py-1 rounded border border-amber-100">
+                <tr key={idx} className="hover:bg-cyan-500/5 transition-all duration-300">
+                  <td className="px-8 py-6 whitespace-nowrap">
+                    <span className="text-amber-300 font-black mono text-xs bg-amber-400/10 px-3 py-1.5 rounded-md border border-amber-400/20 shadow-[0_0_10px_rgba(251,191,36,0.1)] uppercase block w-fit whitespace-nowrap">
                       {item.prepMonth}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-emerald-700 font-bold">
+                  <td className="px-8 py-6">
+                    <span className="text-cyan-400 font-black mono text-xs uppercase">
                       {item.deadlineMonth}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-8 py-6">
                     <div className="flex flex-wrap gap-2">
                       {item.funders.map((funder, fIdx) => (
-                        <span 
-                          key={fIdx} 
-                          className="inline-block bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs font-medium border border-slate-200"
-                        >
+                        <span key={fIdx} className="bg-slate-800/50 text-slate-300 px-2.5 py-1 rounded-md text-[10px] font-bold border border-slate-700 uppercase mono">
                           {funder}
                         </span>
                       ))}
@@ -237,26 +225,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ funding }) => {
                   </td>
                 </tr>
               ))}
-              {deadlinePipeline.length === 0 && (
-                <tr>
-                  <td colSpan={3} className="px-6 py-12 text-center text-slate-400">
-                    No pipeline data available.
-                  </td>
-                </tr>
-              )}
             </tbody>
           </table>
         </div>
-        {deadlinePipeline.length > INITIAL_LIMIT_PIPELINE && (
-          <div className="p-3 border-t border-slate-100 text-center">
-            <button 
-              onClick={() => setIsPipelineExpanded(!isPipelineExpanded)}
-              className="text-emerald-600 hover:text-emerald-700 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 mx-auto transition-all"
-            >
-              {isPipelineExpanded ? <><ChevronUp size={14} /> Show Less</> : <><ChevronDown size={14} /> Expand List ({deadlinePipeline.length})</>}
-            </button>
-          </div>
-        )}
       </Card>
     </div>
   );

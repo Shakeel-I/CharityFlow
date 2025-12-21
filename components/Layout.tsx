@@ -9,7 +9,8 @@ import {
   TrendingUp, 
   FileText,
   Clock,
-  StickyNote
+  StickyNote,
+  Cpu
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -31,51 +32,55 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onChangeV
   ] as const;
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
-      {/* Sidebar - Widened to w-72 to accommodate full app name */}
-      <aside className="w-72 bg-slate-900 text-white flex flex-col shadow-xl z-10 shrink-0">
-        <div className="p-6 border-b border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-emerald-500 rounded-lg flex items-center justify-center font-black text-xl shadow-inner shrink-0">W</div>
-            <h1 className="text-xl font-bold tracking-tight text-white whitespace-nowrap" title="WandCareAlliance">
-              WandCareAlliance
+    <div className="flex h-screen overflow-hidden">
+      {/* High-Tech Sidebar */}
+      <aside className="w-72 glass border-r border-slate-800 flex flex-col z-20 shrink-0">
+        <div className="p-8 border-b border-slate-800/50 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-2 opacity-10">
+            <Cpu size={120} />
+          </div>
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 bg-cyan-500 rounded-xl flex items-center justify-center font-black text-2xl shadow-[0_0_20px_rgba(34,211,238,0.4)] text-slate-950">W</div>
+            <h1 className="text-xl font-black tracking-tighter text-white leading-none">
+              WandCare<br/><span className="text-cyan-400">Alliance</span>
             </h1>
           </div>
-          <p className="text-emerald-400 text-xl mt-2 uppercase tracking-widest pl-12 font-black leading-tight">
-            Fundraising CRM
+          <p className="text-cyan-400 text-2xl uppercase tracking-[0.2em] font-black italic neon-glow-cyan">
+            CRM <span className="text-xs align-top opacity-50 font-normal">v4.0.0</span>
           </p>
         </div>
 
-        <nav className="flex-1 overflow-y-auto py-6 custom-scrollbar">
-          <ul className="space-y-1 px-3">
+        <nav className="flex-1 overflow-y-auto py-8 custom-scrollbar">
+          <ul className="space-y-2 px-4">
             {navItems.map((item) => (
               <li key={item.id}>
                 <button
                   onClick={() => onChangeView(item.id as ViewType)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-left ${
+                  className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-xl transition-all duration-300 text-left group ${
                     currentView === item.id 
-                      ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/20' 
-                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                      ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 shadow-[inset_0_0_10px_rgba(34,211,238,0.1)]' 
+                      : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-100 border border-transparent'
                   }`}
                 >
-                  <item.icon size={18} className="shrink-0" />
-                  <span className="font-medium text-sm leading-tight">{item.label}</span>
+                  <item.icon size={20} className={`shrink-0 transition-transform duration-300 ${currentView === item.id ? 'scale-110' : 'group-hover:scale-110'}`} />
+                  <span className={`font-bold text-sm tracking-wide ${currentView === item.id ? 'neon-glow-cyan' : ''}`}>{item.label}</span>
                 </button>
               </li>
             ))}
           </ul>
         </nav>
 
-        <div className="p-4 border-t border-slate-800 bg-slate-950/50">
-          <div className="text-xs text-slate-500 text-center">
-            &copy; {new Date().getFullYear()} WandCareAlliance
+        <div className="p-6 border-t border-slate-800/50 bg-slate-950/20">
+          <div className="flex items-center justify-between text-[10px] mono text-slate-500">
+            <span>SYSTEM: ONLINE</span>
+            <span>ID: WCA-7729</span>
           </div>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto relative">
-        <div className="max-w-7xl mx-auto p-8">
+      {/* Main Content Area */}
+      <main className="flex-1 overflow-y-auto relative bg-slate-950/50">
+        <div className="max-w-7xl mx-auto p-10">
           {children}
         </div>
       </main>

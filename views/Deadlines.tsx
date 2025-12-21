@@ -19,65 +19,65 @@ export const Deadlines: React.FC<DeadlinesProps> = ({ data }) => {
     const diffTime = target.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays < 0) return 'bg-slate-100 text-slate-500 border-slate-200'; // Past
-    if (diffDays <= 30) return 'bg-red-50 text-red-700 border-red-200'; // Urgent
-    if (diffDays <= 60) return 'bg-amber-50 text-amber-700 border-amber-200'; // Upcoming
-    return 'bg-emerald-50 text-emerald-700 border-emerald-200'; // Distant
+    if (diffDays < 0) return 'bg-slate-800 text-slate-400 border-slate-700'; // Past
+    if (diffDays <= 30) return 'bg-rose-500/10 text-rose-400 border-rose-500/30 shadow-[0_0_10px_rgba(244,63,94,0.1)]'; // Urgent
+    if (diffDays <= 60) return 'bg-amber-500/10 text-amber-400 border-amber-500/30'; // Upcoming
+    return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'; // Distant
   };
 
   const getStatusColorClass = (status: SMTStatus) => {
     switch (status) {
-      case SMTStatus.SUCCESSFUL: return 'bg-emerald-100 text-emerald-800';
-      case SMTStatus.CONSIDERATION: return 'bg-purple-100 text-purple-800';
-      case SMTStatus.MANAGERS_MEETING: return 'bg-indigo-100 text-indigo-800';
+      case SMTStatus.SUCCESSFUL: return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+      case SMTStatus.CONSIDERATION: return 'bg-purple-500/10 text-purple-400 border-purple-500/30';
+      case SMTStatus.MANAGERS_MEETING: return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30';
       case SMTStatus.PROGRESS_APP:
       case SMTStatus.PROGRESS_AWAITING:
-      case SMTStatus.PROGRESS_SUITABLE: return 'bg-blue-100 text-blue-800';
+      case SMTStatus.PROGRESS_SUITABLE: return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30';
       case SMTStatus.NOT_PROCEEDING:
-      case SMTStatus.UNSUCCESSFUL: return 'bg-red-100 text-red-800';
-      default: return 'bg-slate-100 text-slate-700';
+      case SMTStatus.UNSUCCESSFUL: return 'bg-rose-500/10 text-rose-400 border-rose-500/30';
+      default: return 'bg-slate-500/10 text-slate-400 border-slate-500/30';
     }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3 mb-6">
-         <h2 className="text-2xl font-bold text-slate-800">Funding to Respond to Deadlines</h2>
-         <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full border border-red-200 font-medium flex items-center gap-1">
-             <AlertCircle size={12} /> Priority View
+      <div className="flex items-center gap-4 mb-8">
+         <h2 className="text-3xl font-black text-white italic tracking-tighter uppercase">Time Horizon</h2>
+         <span className="bg-rose-500/20 text-rose-400 text-[10px] px-3 py-1 rounded-full border border-rose-500/30 font-black uppercase tracking-widest flex items-center gap-2">
+             <AlertCircle size={14} /> Critical Buffer
          </span>
       </div>
 
       <Card>
         <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
-                <thead className="bg-slate-50 text-slate-500 uppercase font-medium text-xs">
+                <thead className="bg-slate-900/50 text-slate-400 uppercase font-black mono text-[10px] tracking-widest">
                     <tr>
-                        <th className="px-6 py-4">Deadline</th>
-                        <th className="px-6 py-4">Funder</th>
-                        <th className="px-6 py-4">Grant Name</th>
-                        <th className="px-6 py-4 text-right">Amount</th>
-                        <th className="px-6 py-4">Assigned To</th>
-                        <th className="px-6 py-4">Status</th>
+                        <th className="px-8 py-4">Deadline Index</th>
+                        <th className="px-8 py-4">Funder</th>
+                        <th className="px-8 py-4">Grant Vector</th>
+                        <th className="px-8 py-4 text-right">Amount</th>
+                        <th className="px-8 py-4">Assigned Unit</th>
+                        <th className="px-8 py-4">Status</th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-800/50">
                     {sortedData.map(grant => {
                         const date = new Date(grant.dateForFunding);
                         return (
-                            <tr key={grant.id} className="hover:bg-slate-50 transition-colors">
-                                <td className="px-6 py-4">
-                                    <div className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold border ${getUrgencyStyle(grant.dateForFunding)}`}>
-                                        <Clock size={12} className="mr-1.5" />
-                                        {date.toLocaleDateString()}
+                            <tr key={grant.id} className="hover:bg-cyan-500/5 transition-colors">
+                                <td className="px-8 py-5">
+                                    <div className={`inline-flex items-center px-3 py-1.5 rounded-lg text-[10px] font-black border mono ${getUrgencyStyle(grant.dateForFunding)}`}>
+                                        <Clock size={12} className="mr-2" />
+                                        {date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}
                                     </div>
                                 </td>
-                                <td className="px-6 py-4 font-medium text-slate-900">{grant.funder}</td>
-                                <td className="px-6 py-4 text-slate-600">{grant.fundName}</td>
-                                <td className="px-6 py-4 text-emerald-600 font-medium text-right">£{grant.amount.toLocaleString()}</td>
-                                <td className="px-6 py-4 text-slate-600">{grant.assignedTo || '-'}</td>
-                                <td className="px-6 py-4">
-                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium uppercase ${getStatusColorClass(grant.smtStatus)}`}>
+                                <td className="px-8 py-5 font-black text-slate-100 uppercase tracking-tight">{grant.funder}</td>
+                                <td className="px-8 py-5 text-slate-300 text-xs font-medium">{grant.fundName}</td>
+                                <td className="px-8 py-5 text-cyan-400 font-black text-right mono">£{grant.amount.toLocaleString()}</td>
+                                <td className="px-8 py-5 text-slate-400 mono text-[10px] uppercase font-bold">{grant.assignedTo || '-'}</td>
+                                <td className="px-8 py-5">
+                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest border ${getStatusColorClass(grant.smtStatus)}`}>
                                         {grant.smtStatus}
                                     </span>
                                 </td>
@@ -85,7 +85,7 @@ export const Deadlines: React.FC<DeadlinesProps> = ({ data }) => {
                         );
                     })}
                     {sortedData.length === 0 && (
-                        <tr><td colSpan={6} className="px-6 py-12 text-center text-slate-400">No deadlines found.</td></tr>
+                        <tr><td colSpan={6} className="px-8 py-16 text-center text-slate-500 uppercase mono text-xs tracking-[0.2em]">NO CHRONOLOGICAL DATA DETECTED</td></tr>
                     )}
                 </tbody>
             </table>

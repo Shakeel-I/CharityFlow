@@ -21,35 +21,49 @@ const STATUSES = Object.values(SMTStatus);
 
 const generateDummyFunding = (): FundingGrant[] => {
   const data: FundingGrant[] = [];
-  const funders = ["BBC Children in Need", "National Lottery", "Lloyds Bank Foundation", "Paul Hamlyn Foundation", "Esmee Fairbairn", "Comic Relief", "Tudor Trust", "Garfield Weston", "Henry Smith Charity", "Clothworkers Foundation"];
+  const funders = [
+    "BBC Children in Need", "National Lottery", "Lloyds Bank Foundation", 
+    "Paul Hamlyn Foundation", "Esmee Fairbairn", "Comic Relief", 
+    "Tudor Trust", "Garfield Weston", "Henry Smith Charity", 
+    "Clothworkers Foundation", "Sobell Foundation", "Rayne Foundation"
+  ];
   
-  for (let i = 0; i < 50; i++) {
-    const monthOffset = i % 14; 
-    const prepDate = new Date(2025, 10 + monthOffset, 1);
-    const deadlineDate = new Date(2025, 12 + monthOffset, 1);
+  const count = 80;
+  let totalAllocated = 0;
+
+  for (let i = 0; i < count; i++) {
+    const monthOffset = i % 18; 
+    const prepDate = new Date(2025, 8 + monthOffset, 1);
+    const deadlineDate = new Date(2025, 10 + monthOffset, 1);
     
     const prepMonthStr = prepDate.toLocaleString('en-GB', { month: 'short', year: 'numeric' });
     const deadlineMonthStr = deadlineDate.toLocaleString('en-GB', { month: 'short', year: 'numeric' });
+
+    const amount = i < 10 ? 10000 : (i < 30 ? 4000 : (i < 60 ? 1500 : 500));
+    totalAllocated += amount;
+
+    const statusIndex = (i * 7 + Math.floor(i / 3)) % STATUSES.length;
 
     data.push({
       id: `grant-${i}`,
       funder: `${funders[i % funders.length]} ${Math.floor(i / funders.length) + 1}`,
       fundName: `Grant Scheme ${i + 1}`,
-      isSmallFund: i % 5 === 0,
-      smtStatus: STATUSES[i % STATUSES.length],
+      isSmallFund: i % 4 === 0,
+      smtStatus: STATUSES[statusIndex],
       assignedTo: i % 3 === 0 ? 'Sarah Jenkins' : 'Mike Ross',
       relevantWCAProject: PROJECTS[i % PROJECTS.length],
-      details: 'Standard proposal for program expansion.',
-      amount: 5000 + (Math.floor(Math.random() * 20) * 1000),
+      details: 'Neural assessment of regional growth and infrastructure.',
+      amount: amount,
       dateForFunding: deadlineDate.toISOString().split('T')[0],
       prepMonth: prepMonthStr,
       deadlineMonth: deadlineMonthStr,
       deliveryDates: '2026-2027',
-      action: i % 2 === 0 ? 'Drafting Stage' : 'Awaiting Docs',
+      action: i % 2 === 0 ? 'Verification Phase' : 'Data Integrity Check',
       website: 'https://example.org',
       createdAt: new Date().toISOString()
     });
   }
+  
   return data;
 };
 
@@ -148,7 +162,11 @@ const App: React.FC = () => {
         <FundingManager 
             data={fundingData} 
             onSave={handleSaveFunding} 
-            onDelete={deleteFunding} 
+            onDelete={deleteFunding}
+            tenders={tenders}
+            philanthropy={philanthropy}
+            strategy={strategy}
+            notes={notes}
         />
       )}
       {currentView === 'tenders' && (
