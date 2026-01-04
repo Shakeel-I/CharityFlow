@@ -42,7 +42,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onChangeV
           <div className="flex items-center gap-4 mb-4">
             <div className="w-12 h-12 bg-cyan-500 rounded-xl flex items-center justify-center font-black text-2xl shadow-[0_0_20px_rgba(34,211,238,0.4)] text-slate-950">W</div>
             <h1 className="text-xl font-black tracking-tighter text-white leading-none">
-              WandCare<br/><span className="text-cyan-400">Alliance</span>
+              WanCare<br/><span className="text-cyan-400">Alliance</span>
             </h1>
           </div>
           <p className="text-cyan-400 text-2xl uppercase tracking-[0.2em] font-black italic neon-glow-cyan">
